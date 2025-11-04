@@ -6,4 +6,5 @@ seaborn
 streamlit
 ipykernel
 pymongo
+from_root
 -e .
