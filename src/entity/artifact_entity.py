@@ -9,3 +9,10 @@ class DataValidationArtifact:
     validation_status:bool
     message: str
     validation_report_file_path: str
+
+@dataclass
+class DataTransformationArtifact:
+    transformed_data_path: str
+    scaler_object_path: str
+    feature_columns: list
+

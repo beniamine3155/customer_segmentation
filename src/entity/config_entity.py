@@ -25,3 +25,11 @@ class DataIngestionConfig:
 class DataValidationConfig:
     data_validation_dir: str = os.path.join(training_pipeline_config.artifact_dir, DATA_VALIDATION_DIR_NAME)
     validation_report_file_path: str = os.path.join(data_validation_dir, DATA_VALIDATION_REPORT_FILE_NAME)
+
+@dataclass
+class DataTransformationConfig:
+    data_transformation_dir: str = os.path.join(training_pipeline_config.artifact_dir, DATA_TRANSFORMATION_DIR_NAME)
+    transformed_data_dir: str = os.path.join(data_transformation_dir, DATA_TRANSFORMATION_TRANSFORMED_DATA_DIR)
+    transformed_object_dir: str = os.path.join(data_transformation_dir, DATA_TRANSFORMATION_TRANSFORMED_OBJECT_DIR)
+    transformed_data_path: str = os.path.join(transformed_data_dir, FILE_NAME)
+    scaler_object_path: str = os.path.join(transformed_object_dir, PREPROCSSING_OBJECT_FILE_NAME)
