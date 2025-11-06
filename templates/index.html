@@ -482,7 +482,7 @@
             <!-- Prediction Form -->
             <div class="form-container">
                 <h2>Enter Your Information</h2>
-                <form id="predictionForm">
+                <form id="predictionForm" method="POST" action="/predict-form">
                     <div class="form-grid">
                         <!-- Age Input -->
                         <div class="input-group">
@@ -566,29 +566,78 @@
             </div>
 
             <!-- Results Section -->
-            <div id="resultContainer" class="result-container">
+            {% if result %}
+            <div id="resultContainer" class="result-container" style="display: block;">
                 <h2>Your Customer Segment</h2>
                 <div class="result-card">
-                    <div class="segment-name" id="segmentName">Premium Shoppers</div>
+                    <div class="segment-name" id="segmentName">{{ result.segment_name }}</div>
                     <div class="cluster-info">
-                        <span class="cluster-id" id="clusterId">Cluster 3</span>
+                        <span class="cluster-id" id="clusterId">Cluster {{ result.cluster_id }}</span>
                     </div>
                     
                     <div class="data-display">
                         <h3>Your Input Data:</h3>
                         <div class="data-grid" id="dataGrid">
-                            <!-- Data will be populated by JavaScript -->
+                            <div class="data-item">
+                                <span class="data-label">Age:</span>
+                                <span class="data-value">{{ result.customer_data.age }} years</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">Income:</span>
+                                <span class="data-value">${{ "{:,.0f}".format(result.customer_data.income) }}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">Total Spending:</span>
+                                <span class="data-value">${{ "{:,.0f}".format(result.customer_data.total_spend) }}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">Days Since Last Purchase:</span>
+                                <span class="data-value">{{ result.customer_data.recency }} days</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">Web Purchases:</span>
+                                <span class="data-value">{{ result.customer_data.num_web_purchases }}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">Store Purchases:</span>
+                                <span class="data-value">{{ result.customer_data.num_store_purchases }}</span>
+                            </div>
+                            <div class="data-item">
+                                <span class="data-label">Monthly Web Visits:</span>
+                                <span class="data-value">{{ result.customer_data.num_web_visits_month }}</span>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                            <strong>Segment Description:</strong>
+                            <p style="margin-top: 5px; color: #6c757d;">{{ result.description }}</p>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Try Again Button -->
                 <div class="button-container">
-                    <button type="button" class="secondary-btn" onclick="resetForm()">
+                    <button type="button" class="secondary-btn" onclick="location.reload()">
                         Try Another Prediction
                     </button>
                 </div>
             </div>
+            {% endif %}
+            
+            <!-- Error Display -->
+            {% if error %}
+            <div class="result-container" style="display: block; border-left-color: #dc3545;">
+                <h2 style="color: #dc3545;">⚠️ Error</h2>
+                <div class="result-card" style="background: #f8d7da; border-color: #f5c6cb;">
+                    <p style="color: #721c24; text-align: center; font-size: 1.1rem;">{{ error }}</p>
+                    <div class="button-container" style="margin-top: 20px;">
+                        <button type="button" class="secondary-btn" onclick="location.reload()">
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
 
             <!-- Information Section -->
             <div class="info-container">
@@ -635,33 +684,20 @@
     </div>
 
     <script>
-        // Segment mapping
-        const segmentMapping = {
-            0: { name: "Budget Conscious", description: "Price-sensitive customers who focus on value" },
-            1: { name: "High Value", description: "High income customers with significant spending power" },
-            2: { name: "Regular Customers", description: "Consistent customers with moderate spending patterns" },
-            3: { name: "Premium Shoppers", description: "Quality-focused customers who prefer premium products" },
-            4: { name: "Occasional Buyers", description: "Customers who make infrequent but meaningful purchases" },
-            5: { name: "Loyal Customers", description: "Highly engaged customers with frequent interactions" }
-        };
+        // FastAPI integration - server handles all predictions
 
         // Form submission handler
         document.getElementById('predictionForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
             if (!validateForm()) {
+                e.preventDefault();
                 return;
             }
 
-            // Show loading
+            // Show loading overlay when form is submitted
             document.getElementById('loadingOverlay').style.display = 'flex';
             
-            // Simulate prediction (replace with actual API call)
-            setTimeout(() => {
-                const prediction = simulatePrediction();
-                displayResults(prediction);
-                document.getElementById('loadingOverlay').style.display = 'none';
-            }, 2000);
+            // Let the form submit naturally to the server
+            // The server will handle the prediction and return results
         });
 
         // Form validation
@@ -683,91 +719,7 @@
             return true;
         }
 
-        // Simulate prediction (replace with actual prediction logic)
-        function simulatePrediction() {
-            const formData = {
-                age: parseInt(document.getElementById('age').value),
-                income: parseInt(document.getElementById('income').value),
-                total_spend: parseInt(document.getElementById('total_spend').value),
-                recency: parseInt(document.getElementById('recency').value),
-                num_web_purchases: parseInt(document.getElementById('num_web_purchases').value),
-                num_store_purchases: parseInt(document.getElementById('num_store_purchases').value),
-                num_web_visits_month: parseInt(document.getElementById('num_web_visits_month').value)
-            };
-
-            // Simple rule-based prediction for demo
-            let clusterId = 0;
-            
-            if (formData.income > 70000 && formData.total_spend > 2000) {
-                clusterId = 1; // High Value
-            } else if (formData.total_spend > 1500 && formData.num_web_purchases < 3) {
-                clusterId = 3; // Premium Shoppers
-            } else if (formData.recency > 60 || (formData.num_web_purchases + formData.num_store_purchases) < 3) {
-                clusterId = 4; // Occasional Buyers
-            } else if ((formData.num_web_purchases + formData.num_store_purchases) > 10 && formData.num_web_visits_month > 5) {
-                clusterId = 5; // Loyal Customers
-            } else if (formData.total_spend < 800) {
-                clusterId = 0; // Budget Conscious
-            } else {
-                clusterId = 2; // Regular Customers
-            }
-
-            return {
-                cluster: clusterId,
-                segment: segmentMapping[clusterId],
-                data: formData
-            };
-        }
-
-        // Display results
-        function displayResults(prediction) {
-            document.getElementById('segmentName').textContent = prediction.segment.name;
-            document.getElementById('clusterId').textContent = `Cluster ${prediction.cluster}`;
-            
-            // Populate data grid
-            const dataGrid = document.getElementById('dataGrid');
-            dataGrid.innerHTML = `
-                <div class="data-item">
-                    <span class="data-label">Age:</span>
-                    <span class="data-value">${prediction.data.age} years</span>
-                </div>
-                <div class="data-item">
-                    <span class="data-label">Income:</span>
-                    <span class="data-value">$${prediction.data.income.toLocaleString()}</span>
-                </div>
-                <div class="data-item">
-                    <span class="data-label">Total Spending:</span>
-                    <span class="data-value">$${prediction.data.total_spend.toLocaleString()}</span>
-                </div>
-                <div class="data-item">
-                    <span class="data-label">Days Since Last Purchase:</span>
-                    <span class="data-value">${prediction.data.recency} days</span>
-                </div>
-                <div class="data-item">
-                    <span class="data-label">Web Purchases:</span>
-                    <span class="data-value">${prediction.data.num_web_purchases}</span>
-                </div>
-                <div class="data-item">
-                    <span class="data-label">Store Purchases:</span>
-                    <span class="data-value">${prediction.data.num_store_purchases}</span>
-                </div>
-                <div class="data-item">
-                    <span class="data-label">Monthly Web Visits:</span>
-                    <span class="data-value">${prediction.data.num_web_visits_month}</span>
-                </div>
-            `;
-            
-            // Show results
-            document.getElementById('resultContainer').style.display = 'block';
-            document.getElementById('resultContainer').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        // Reset form
-        function resetForm() {
-            document.getElementById('predictionForm').reset();
-            document.getElementById('resultContainer').style.display = 'none';
-            document.querySelector('.form-container').scrollIntoView({ behavior: 'smooth' });
-        }
+        // Results are now handled by the server, no need for client-side simulation
 
         // Add visual feedback for form inputs
         document.querySelectorAll('input').forEach(input => {
