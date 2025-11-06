@@ -1,0 +1,10 @@
+artifact
+logs
+notebook
+segvenv
+src.egg-info
+.gitignore
+demo.py
+template.py
+info.txt
+README.md
