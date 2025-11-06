@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Segmentation Predictor</title>
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* Header Styles */
+        .header {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #6c757d;
+            max-width: 600px;
+            margin: 0 auto;
+            font-weight: 400;
+        }
+
+        /* Form Container */
+        .form-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 50px;
+            border-radius: 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .form-container h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 40px;
+            font-size: 2.2rem;
+            font-weight: 700;
+            position: relative;
+        }
+
+        .form-container h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+
+        /* Form Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        /* Input Groups */
+        .input-group {
+            position: relative;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 18px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            transition: all 0.4s ease;
+            background: #fff;
+            font-family: inherit;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .input-group input:hover {
+            border-color: #667eea;
+        }
+
+        .input-group small {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-top: 8px;
+            display: block;
+            font-style: italic;
+        }
+
+        /* Icons for labels */
+        .icon {
+            font-size: 1.2rem;
+        }
+
+        /* Button Container */
+        .button-container {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .predict-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px 50px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .predict-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.6);
+        }
+
+        .predict-btn:active {
+            transform: translateY(-2px);
+        }
+
+        /* Result Container */
+        .result-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 30px;
+            display: none;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-container h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .result-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 40px;
+            border-radius: 20px;
+            border-left: 6px solid #667eea;
+            margin-bottom: 20px;
+        }
+
+        .segment-name {
+            font-size: 2.2rem;
+            color: #2c3e50;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .cluster-info {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .cluster-id {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        /* Data Display */
+        .data-display {
+            margin-top: 30px;
+        }
+
+        .data-display h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .data-item {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #f1f3f4;
+        }
+
+        .data-label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.95rem;
+        }
+
+        .data-value {
+            font-weight: 700;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        /* Info Section */
+        .info-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 50px;
+            border-radius: 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .info-container h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 40px;
+            font-size: 2.2rem;
+            font-weight: 700;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .info-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 30px;
+            border-radius: 18px;
+            text-align: center;
+            transition: all 0.4s ease;
+            border: 1px solid #dee2e6;
+            cursor: pointer;
+        }
+
+        .info-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            border-color: #667eea;
+        }
+
+        .info-card h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .info-card p {
+            color: #6c757d;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        /* Secondary Button */
+        .secondary-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 15px 35px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .secondary-btn:hover {
+            background: #495057;
+            transform: translateY(-2px);
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 25px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-overlay p {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: rgba(255, 255, 255, 0.9);
+            margin-top: 40px;
+            font-size: 1rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .form-container,
+            .info-container {
+                padding: 30px 20px;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 25px;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .predict-btn {
+                width: 100%;
+                padding: 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .header {
+                padding: 25px 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .form-container,
+            .info-container {
+                padding: 25px 15px;
+            }
+        }
+
+        /* Form Validation Styles */
+        .input-group input:invalid {
+            border-color: #dc3545;
+        }
+
+        .input-group input:invalid:focus {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.15);
+        }
+
+        /* Success State */
+        .form-success {
+            border-color: #28a745 !important;
+        }
+
+        .form-success:focus {
+            border-color: #28a745 !important;
+            box-shadow: 0 0 0 4px rgba(40, 167, 69, 0.15) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <header class="header">
+            <h1>Customer Segmentation Predictor</h1>
+            <p class="subtitle">Discover your customer segment using advanced machine learning algorithms</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Prediction Form -->
+            <div class="form-container">
+                <h2>Enter Your Information</h2>
+                <form id="predictionForm">
+                    <div class="form-grid">
+                        <!-- Age Input -->
+                        <div class="input-group">
+                            <label for="age">
+                                <span class="icon">👤</span>
+                                Age
+                            </label>
+                            <input type="number" id="age" name="age" min="18" max="100" required placeholder="Enter your age">
+                            <small>Your current age (18-100 years)</small>
+                        </div>
+
+                        <!-- Income Input -->
+                        <div class="input-group">
+                            <label for="income">
+                                <span class="icon">💰</span>
+                                Annual Income ($)
+                            </label>
+                            <input type="number" id="income" name="income" min="0" step="1000" required placeholder="e.g., 50000">
+                            <small>Your annual income in dollars</small>
+                        </div>
+
+                        <!-- Total Spend Input -->
+                        <div class="input-group">
+                            <label for="total_spend">
+                                <span class="icon">🛒</span>
+                                Total Annual Spending ($)
+                            </label>
+                            <input type="number" id="total_spend" name="total_spend" min="0" step="100" required placeholder="e.g., 5000">
+                            <small>Total amount spent on all products annually</small>
+                        </div>
+
+                        <!-- Recency Input -->
+                        <div class="input-group">
+                            <label for="recency">
+                                <span class="icon">📅</span>
+                                Days Since Last Purchase
+                            </label>
+                            <input type="number" id="recency" name="recency" min="0" max="365" required placeholder="e.g., 30">
+                            <small>Number of days since your last purchase</small>
+                        </div>
+
+                        <!-- Web Purchases Input -->
+                        <div class="input-group">
+                            <label for="num_web_purchases">
+                                <span class="icon">💻</span>
+                                Web Purchases
+                            </label>
+                            <input type="number" id="num_web_purchases" name="num_web_purchases" min="0" required placeholder="e.g., 5">
+                            <small>Number of purchases made through website</small>
+                        </div>
+
+                        <!-- Store Purchases Input -->
+                        <div class="input-group">
+                            <label for="num_store_purchases">
+                                <span class="icon">🏪</span>
+                                Store Purchases
+                            </label>
+                            <input type="number" id="num_store_purchases" name="num_store_purchases" min="0" required placeholder="e.g., 3">
+                            <small>Number of purchases made in physical stores</small>
+                        </div>
+
+                        <!-- Web Visits Input -->
+                        <div class="input-group">
+                            <label for="num_web_visits_month">
+                                <span class="icon">🌐</span>
+                                Monthly Web Visits
+                            </label>
+                            <input type="number" id="num_web_visits_month" name="num_web_visits_month" min="0" required placeholder="e.g., 4">
+                            <small>Number of website visits per month</small>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="button-container">
+                        <button type="submit" class="predict-btn">
+                            <span class="btn-text">Predict My Segment</span>
+                            <span class="btn-icon"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultContainer" class="result-container">
+                <h2>Your Customer Segment</h2>
+                <div class="result-card">
+                    <div class="segment-name" id="segmentName">Premium Shoppers</div>
+                    <div class="cluster-info">
+                        <span class="cluster-id" id="clusterId">Cluster 3</span>
+                    </div>
+                    
+                    <div class="data-display">
+                        <h3>Your Input Data:</h3>
+                        <div class="data-grid" id="dataGrid">
+                            <!-- Data will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Try Again Button -->
+                <div class="button-container">
+                    <button type="button" class="secondary-btn" onclick="resetForm()">
+                        Try Another Prediction
+                    </button>
+                </div>
+            </div>
+
+            <!-- Information Section -->
+            <div class="info-container">
+                <h2>Customer Segments Explained</h2>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h3>Budget Conscious</h3>
+                        <p>Price-sensitive customers who focus on value and deals. They research thoroughly before making purchases and prefer cost-effective solutions.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>High Value</h3>
+                        <p>Customers with high income and significant spending power. They make frequent, high-value purchases and are less price-sensitive.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Regular Customers</h3>
+                        <p>Consistent customers with moderate spending patterns. They maintain steady purchasing behavior and show balanced engagement.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Premium Shoppers</h3>
+                        <p>Quality-focused customers who prefer premium products. They value brand reputation and are willing to pay more for superior quality.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Occasional Buyers</h3>
+                        <p>Customers who make infrequent but meaningful purchases. They often buy during special occasions or when specific needs arise.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Loyal Customers</h3>
+                        <p>Highly engaged customers with frequent interactions. They show strong brand loyalty and often become brand advocates.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2025 Customer Segmentation Predictor | Powered by Machine Learning & AI</p>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>Analyzing your customer profile...</p>
+    </div>
+
+    <script>
+        // Segment mapping
+        const segmentMapping = {
+            0: { name: "Budget Conscious", description: "Price-sensitive customers who focus on value" },
+            1: { name: "High Value", description: "High income customers with significant spending power" },
+            2: { name: "Regular Customers", description: "Consistent customers with moderate spending patterns" },
+            3: { name: "Premium Shoppers", description: "Quality-focused customers who prefer premium products" },
+            4: { name: "Occasional Buyers", description: "Customers who make infrequent but meaningful purchases" },
+            5: { name: "Loyal Customers", description: "Highly engaged customers with frequent interactions" }
+        };
+
+        // Form submission handler
+        document.getElementById('predictionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!validateForm()) {
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            
+            // Simulate prediction (replace with actual API call)
+            setTimeout(() => {
+                const prediction = simulatePrediction();
+                displayResults(prediction);
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }, 2000);
+        });
+
+        // Form validation
+        function validateForm() {
+            const age = parseInt(document.getElementById('age').value);
+            const income = parseInt(document.getElementById('income').value);
+            const totalSpend = parseInt(document.getElementById('total_spend').value);
+            
+            if (totalSpend > income) {
+                alert('⚠️ Warning: Total spending cannot exceed annual income. Please check your values.');
+                return false;
+            }
+            
+            if (age < 18 || age > 100) {
+                alert('⚠️ Please enter a valid age between 18 and 100.');
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Simulate prediction (replace with actual prediction logic)
+        function simulatePrediction() {
+            const formData = {
+                age: parseInt(document.getElementById('age').value),
+                income: parseInt(document.getElementById('income').value),
+                total_spend: parseInt(document.getElementById('total_spend').value),
+                recency: parseInt(document.getElementById('recency').value),
+                num_web_purchases: parseInt(document.getElementById('num_web_purchases').value),
+                num_store_purchases: parseInt(document.getElementById('num_store_purchases').value),
+                num_web_visits_month: parseInt(document.getElementById('num_web_visits_month').value)
+            };
+
+            // Simple rule-based prediction for demo
+            let clusterId = 0;
+            
+            if (formData.income > 70000 && formData.total_spend > 2000) {
+                clusterId = 1; // High Value
+            } else if (formData.total_spend > 1500 && formData.num_web_purchases < 3) {
+                clusterId = 3; // Premium Shoppers
+            } else if (formData.recency > 60 || (formData.num_web_purchases + formData.num_store_purchases) < 3) {
+                clusterId = 4; // Occasional Buyers
+            } else if ((formData.num_web_purchases + formData.num_store_purchases) > 10 && formData.num_web_visits_month > 5) {
+                clusterId = 5; // Loyal Customers
+            } else if (formData.total_spend < 800) {
+                clusterId = 0; // Budget Conscious
+            } else {
+                clusterId = 2; // Regular Customers
+            }
+
+            return {
+                cluster: clusterId,
+                segment: segmentMapping[clusterId],
+                data: formData
+            };
+        }
+
+        // Display results
+        function displayResults(prediction) {
+            document.getElementById('segmentName').textContent = prediction.segment.name;
+            document.getElementById('clusterId').textContent = `Cluster ${prediction.cluster}`;
+            
+            // Populate data grid
+            const dataGrid = document.getElementById('dataGrid');
+            dataGrid.innerHTML = `
+                <div class="data-item">
+                    <span class="data-label">Age:</span>
+                    <span class="data-value">${prediction.data.age} years</span>
+                </div>
+                <div class="data-item">
+                    <span class="data-label">Income:</span>
+                    <span class="data-value">$${prediction.data.income.toLocaleString()}</span>
+                </div>
+                <div class="data-item">
+                    <span class="data-label">Total Spending:</span>
+                    <span class="data-value">$${prediction.data.total_spend.toLocaleString()}</span>
+                </div>
+                <div class="data-item">
+                    <span class="data-label">Days Since Last Purchase:</span>
+                    <span class="data-value">${prediction.data.recency} days</span>
+                </div>
+                <div class="data-item">
+                    <span class="data-label">Web Purchases:</span>
+                    <span class="data-value">${prediction.data.num_web_purchases}</span>
+                </div>
+                <div class="data-item">
+                    <span class="data-label">Store Purchases:</span>
+                    <span class="data-value">${prediction.data.num_store_purchases}</span>
+                </div>
+                <div class="data-item">
+                    <span class="data-label">Monthly Web Visits:</span>
+                    <span class="data-value">${prediction.data.num_web_visits_month}</span>
+                </div>
+            `;
+            
+            // Show results
+            document.getElementById('resultContainer').style.display = 'block';
+            document.getElementById('resultContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Reset form
+        function resetForm() {
+            document.getElementById('predictionForm').reset();
+            document.getElementById('resultContainer').style.display = 'none';
+            document.querySelector('.form-container').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Add visual feedback for form inputs
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.checkValidity()) {
+                    this.classList.add('form-success');
+                } else {
+                    this.classList.remove('form-success');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
